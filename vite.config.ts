@@ -1,4 +1,7 @@
-import { cloudflareDevProxyVitePlugin as remixCloudflareDevProxy, vitePlugin as remixVitePlugin } from '@remix-run/dev';
+import {
+  cloudflareDevProxyVitePlugin as remixCloudflareDevProxy,
+  vitePlugin as remixVitePlugin,
+} from '@remix-run/dev';
 import UnoCSS from 'unocss/vite';
 import { defineConfig, type ViteDevServer } from 'vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
@@ -9,26 +12,49 @@ export default defineConfig((config) => {
   return {
     build: {
       target: 'esnext',
+      minify: false, // Disable minification to prevent esbuild-related deadlocks
+      commonjsOptions: {
+        include: [/node_modules/], // Ensure compatibility with CommonJS modules
+      },
+      rollupOptions: {
+        // Optional: Customize Rollup bundling for larger projects
+        output: {
+          manualChunks: undefined, // Allow Vite to handle chunking
+        },
+      },
     },
     plugins: [
+      // Add Node.js polyfills for compatibility
       nodePolyfills({
         include: ['path', 'buffer'],
       }),
+      // Enable Remix Cloudflare proxy plugin for dev mode
       config.mode !== 'test' && remixCloudflareDevProxy(),
+      // Remix Vite plugin with enhanced configuration
       remixVitePlugin({
         future: {
           v3_fetcherPersist: true,
           v3_relativeSplatPath: true,
           v3_throwAbortReason: true,
-          v3_lazyRouteDiscovery: true
+          v3_lazyRouteDiscovery: true,
         },
       }),
+      // UnoCSS for utility-first styling
       UnoCSS(),
+      // Path aliases from tsconfig.json
       tsconfigPaths(),
+      // Chrome-specific issue plugin for debugging
       chrome129IssuePlugin(),
+      // Optimize CSS Modules in production mode
       config.mode === 'production' && optimizeCssModules({ apply: 'build' }),
     ],
-    envPrefix: ["VITE_", "OPENAI_LIKE_API_", "OLLAMA_API_BASE_URL", "LMSTUDIO_API_BASE_URL","TOGETHER_API_BASE_URL"],
+    envPrefix: [
+      'VITE_',
+      'OPENAI_LIKE_API_',
+      'OLLAMA_API_BASE_URL',
+      'LMSTUDIO_API_BASE_URL',
+      'TOGETHER_API_BASE_URL',
+    ],
     css: {
       preprocessorOptions: {
         scss: {
@@ -39,6 +65,7 @@ export default defineConfig((config) => {
   };
 });
 
+// Chrome-specific debugging plugin
 function chrome129IssuePlugin() {
   return {
     name: 'chrome129IssuePlugin',
