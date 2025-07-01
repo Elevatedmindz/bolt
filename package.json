@@ -1,3 +1,5 @@
+"prepare": "if [ \"$CI\" != \"true\" ]; then husky install; fi"
+
 {
   "name": "bolt",
   "description": "An AI Agent",
